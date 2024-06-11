@@ -1,4 +1,6 @@
 import { Admin } from "../models/admin.model.js";
+import { AdminMFU } from "../models/adminsMessage.model.js";
+import { AdminTUM } from "../models/adminsMessageToUsers.model.js";
 import { User } from "../models/user.model.js";
 import { ApiERROR } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -163,7 +165,72 @@ const adminGetAllUser=asyncHandler(async(req,res)=>{
 })
 
 const adminEvaluating=asyncHandler(async (req,res)=>{
-    
+    const id=req.query.id
+    const acceptance=req.query.acceptance
+    const {message,userprojects}=req.body
+    if([id,acceptance,message].some((field)=> field==="")){
+        throw new ApiERROR(400,"All fields are required")
+    }
+    const user=await User.findById(id)
+    if(!user){
+        throw new ApiERROR(400,"User doesnot exist")
+    }
+    if(!(acceptance==="YES" || acceptance==="NO")){
+        throw new ApiERROR(400,"Please select only one as it is from YES or NO")
+    }
+    if(acceptance==="YES"){
+        if(userprojects===null){
+            throw new ApiERROR(400,"When you are accepting the applicant as an Intern you have to give him aleast one project")
+        }
+        user.intern=true
+        user.projects=userprojects
+        try {
+            await user.save({validateBeforeSave:false})
+        } catch (error) {
+            throw new ApiERROR(500,error?.message || "Something went wrong while saving project details")
+        }
+        const messageforUser=await AdminTUM.create({
+            message:message,
+            userid:id
+        })
+        if(!messageforUser){
+            throw new ApiERROR(500,"something went wrong while sending message to User")
+        }
+        return res.status(200).json(new ApiResponse(200,{},"User successfully became your intern"))
+
+    }
+    else{
+
+        const messageforUser=await AdminTUM.create({
+            message:message,
+            userid:id
+        })
+        if(!messageforUser){
+            throw new ApiERROR(500,"something went wrong while sending message to User")
+        }
+        return res.status(200).json(new ApiResponse(200,{},"you have successfully rejected intern request"))
+    }
+
 })
 
-export {adminRegister,adminLogin,adminLogout,adminUpdate,adminChangeCurrPassword,adminGetAllUser}
+const adminDoingMessageToUser=asyncHandler(async (req,res)=>{
+    const id=req.query.id
+    const {message}=req.body
+    if([id,message].some((field)=> field==="")){
+        throw new ApiERROR(400,"All fields are required")
+    }
+    const user=await User.findById(id)
+    if(!user){
+        throw new ApiERROR(400,"User does not exist")
+    }
+    const sendedMessage=await AdminTUM.create({
+        userid:id,
+        message
+    })
+    if(!sendedMessage){
+        throw new ApiERROR(500,"Something went wrong while sending message")
+    }
+    return res.status(200).json(new ApiResponse(200,{},"You have sended message to user successfully"))
+})
+
+export {adminRegister,adminLogin,adminLogout,adminUpdate,adminChangeCurrPassword,adminGetAllUser,adminEvaluating,adminDoingMessageToUser}

@@ -28,4 +28,4 @@ const projectSchema=new Schema(
     }
 )
 
-export const Projectimage=mongoose.model("Projectimage",projectSchema)
+export const ProjectsDB=mongoose.model("ProjectsDB",projectSchema)

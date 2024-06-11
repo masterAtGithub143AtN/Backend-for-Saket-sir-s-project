@@ -17,11 +17,15 @@ app.use(cookieParser());
 //routes import
 import userRouter from "./routes/user.routes.js"
 import adminRouter  from "./routes/admin.routes.js";
+import projectRouter from "./routes/projects.routes.js";
+import institutesRouter from "./routes/institute.routes.js";
 
 //routes declaration
 
 app.use("/api/v1/users",userRouter)
 app.use("/api/v1/admin",adminRouter)
+app.use("/api/v1/project",projectRouter)
+app.use("/api/v1/institute",institutesRouter)
 
 console.log("app");
 

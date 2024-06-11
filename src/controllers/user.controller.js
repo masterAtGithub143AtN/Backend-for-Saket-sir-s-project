@@ -4,6 +4,7 @@ import { ApiERROR } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import { AdminMFU } from "../models/adminsMessage.model.js";
 
 
 const generateAccessRefreshToken=async(userId)=>{
@@ -227,4 +228,23 @@ const updateAccountDetails=asyncHandler(async (req,res)=>{
 })
 
 
-export {registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails}
+const messageToAdmin=asyncHandler(async(req,res)=>{
+    const {message}=req.body
+    if(message.trim===""){
+        throw new ApiERROR(400,"Please type some message")
+    }
+    if(message.length>100){
+        throw new ApiERROR(400,"Write your message in 100 characters")
+    }
+    const sendedmessage=await AdminMFU.create({
+        userid:req.user._id,
+        messageToAdmin
+    })
+    if(!sendedmessage){
+        throw new ApiERROR(500,"Something went wrong while sendin message")
+    }
+    return res.status(200).json(new ApiResponse(200,{},"You have sended message successfully"))
+})
+
+
+export {registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,messageToAdmin}
