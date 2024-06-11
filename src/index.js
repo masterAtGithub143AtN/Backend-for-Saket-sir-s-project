@@ -3,6 +3,7 @@ import dotenv from "dotenv"
 import express from "express"
 import connectDB from "./db/connection.js";
 import { app } from "./app.js";
+import { User } from "./models/user.model.js";
 
 dotenv.config({
     path: './env'
@@ -21,8 +22,6 @@ connectDB().then(()=>{
 }).catch((err)=>{
     console.log("MONGODB connection failed in index.js file !!!",err);
 })
-
-
 
 
 

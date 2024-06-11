@@ -17,7 +17,7 @@ const uploadOnCloudinary=async (loaclFilePath)=>{
         //upload the file on cloudinary
 
         const response=await cloudinary.uploader.upload(loaclFilePath,{
-            resource_type: "auto"
+            resource_type:"image"
         })
         //file has been uploaded successfully
         console.log("file is uploaded on cloudinary",response.url);

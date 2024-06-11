@@ -14,7 +14,6 @@ const userSchema=new Schema(
         fullname:{
             type: String,
             required: true,
-            unique: true,
             lowercase: true,
             trim: true,
         },
@@ -43,6 +42,9 @@ const userSchema=new Schema(
             UpperCase: true,
             trim: true,
         },
+        resume:{
+            type:String,
+        },
         semester:{
             type:Number,
             required: true,
@@ -52,11 +54,19 @@ const userSchema=new Schema(
             type:Boolean,
             default:false
         },
+        admin:{
+            type: Boolean,
+            default: false
+        },
+        securitycodeofadmin:{
+            type:String,
+            default: ""
+        },
         projects:{
-            type:Array.Number,
+            type:Array,
             default:[]
         },
-        refreshtoken:{
+        refreshToken:{
             type:String
         }
     },
@@ -69,7 +79,7 @@ userSchema.pre("save",async function(next){
     if(!this.isModified("password")){
         return next();
     }
-    this.password=bcrypt.hash(this.password,10)
+    this.password=await bcrypt.hash(this.password,10)
     next()
 })
 

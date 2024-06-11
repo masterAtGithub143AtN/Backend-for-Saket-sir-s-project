@@ -1,4 +1,6 @@
 import mongoose,{Schema} from "mongoose";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 
 const adminSchema=new Schema(
     {
@@ -13,7 +15,6 @@ const adminSchema=new Schema(
         fullname:{
             type: String,
             required: true,
-            unique: true,
             lowercase: true,
             trim: true,
             index: true,
@@ -33,11 +34,10 @@ const adminSchema=new Schema(
         collegename:{
             type: String,
             required: true,
-            unique: true,
             UpperCase: true,
             trim: true,
         },
-        refreshtoken:{
+        refreshToken:{
             type:String
         }
     },{
@@ -45,11 +45,13 @@ const adminSchema=new Schema(
     }
 )
 
+
+
 adminSchema.pre("save",async function(next){
     if(!this.isModified("password")){
         return next();
     }
-    this.password=bcrypt.hash(this.password,10)
+    this.password=await bcrypt.hash(this.password,10)
     next()
 })
 
