@@ -7,7 +7,7 @@ const projectSchema=new Schema(
             type:String,
             required:true,
         },
-        projectDetails:{
+        projectdetails:{
             type:String,
             required:true
         },

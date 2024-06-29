@@ -10,7 +10,15 @@ const AdminMessageFromUsers=new Schema({
     message:{
         type:String,
         required: true
+    },
+    projectid:{
+        type:Schema.Types.ObjectId,
+        ref: "Project",
+        required:true
     }
+},{
+    timestamps:true
+
 })
 
 AdminMessageFromUsers.pre("save",async function(next){

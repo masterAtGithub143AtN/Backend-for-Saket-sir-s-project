@@ -1,6 +1,7 @@
 import { Admin } from "../models/admin.model.js";
 import { AdminMFU } from "../models/adminsMessage.model.js";
 import { AdminTUM } from "../models/adminsMessageToUsers.model.js";
+import { Applied } from "../models/Apply.model.js";
 import { User } from "../models/user.model.js";
 import { ApiERROR } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -23,7 +24,7 @@ const generateAccessRefreshTokenForAdmin=async (userId)=>{
 
 const adminRegister=asyncHandler(async(req,res)=>{
     const {fullname,email,password,username,collegename}=req.body
-    if([username,email,password,collegename,fullname].some((field)=> field==="")){
+    if([username,email,password,collegename,fullname].some((field)=> field?.trim()==="")){
         throw new ApiERROR(400,"All fiels are required")
     }
     const existedAdmin=await Admin.findOne({
@@ -49,10 +50,10 @@ const adminRegister=asyncHandler(async(req,res)=>{
 
 const adminLogin=asyncHandler(async(req,res)=>{
     const {email,username,password}=req.body
-    if(!(email || username)){
+    if((email?.trim()==="" && username?.trim()==="")){
         throw new ApiERROR(400,"Username or password is required")
     }
-    if(password===""){
+    if(password?.trim()===""){
         throw new ApiERROR(400,"Password is required")
     }
     const loginAdmin=await Admin.findOne({
@@ -106,7 +107,7 @@ const adminLogout=asyncHandler(async (req,res)=>{
 const adminUpdate=asyncHandler(async (req,res)=>{
     const admin=req.admin;
      const {email,fullname,collegename}=req.body
-     if([email,fullname,collegename].some((field)=> field==="")){
+     if([email,fullname,collegename].some((field)=> field?.trim()==="")){
         throw new ApiERROR(400, "All fields are required")
      }
      const existedEmail=await Admin.find({email})
@@ -135,7 +136,7 @@ const adminUpdate=asyncHandler(async (req,res)=>{
 
 const adminChangeCurrPassword=asyncHandler(async (req,res)=>{
     const {oldpassword,newpassword}=req.body
-    if([oldpassword,newpassword].some((field)=> field==="")){
+    if([oldpassword,newpassword].some((field)=> field?.trim()==="")){
         throw new ApiERROR(400," All the fileds are required")
     }
     const admin=await Admin.findById(req.admin?._id);
@@ -164,11 +165,23 @@ const adminGetAllUser=asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200,{AllUser:AllUser},"User fetched successfully"))
 })
 
+
+const adminGetAllInternshipRequests=asyncHandler(async(req,res)=>{
+    const AllInternshipRequests=await Applied.find({})
+    if(!AllInternshipRequests){
+        throw new ApiERROR(500,"Something went wrong")
+    }
+    return res.status(200).json(new ApiResponse(200,{AllInternshipRequests:AllInternshipRequests},"Internship requests fetched successfully"))
+})
+
+
+
+
 const adminEvaluating=asyncHandler(async (req,res)=>{
     const id=req.query.id
     const acceptance=req.query.acceptance
     const {message,userprojects}=req.body
-    if([id,acceptance,message].some((field)=> field==="")){
+    if([id,acceptance,message].some((field)=> field?.trim()==="")){
         throw new ApiERROR(400,"All fields are required")
     }
     const user=await User.findById(id)
@@ -216,7 +229,7 @@ const adminEvaluating=asyncHandler(async (req,res)=>{
 const adminDoingMessageToUser=asyncHandler(async (req,res)=>{
     const id=req.query.id
     const {message}=req.body
-    if([id,message].some((field)=> field==="")){
+    if([id,message].some((field)=> field?.trim()==="")){
         throw new ApiERROR(400,"All fields are required")
     }
     const user=await User.findById(id)
@@ -233,4 +246,36 @@ const adminDoingMessageToUser=asyncHandler(async (req,res)=>{
     return res.status(200).json(new ApiResponse(200,{},"You have sended message to user successfully"))
 })
 
-export {adminRegister,adminLogin,adminLogout,adminUpdate,adminChangeCurrPassword,adminGetAllUser,adminEvaluating,adminDoingMessageToUser}
+const deleteMessageToUser=asyncHandler(async(req,res)=>{
+    const id=req.query.id
+    if(id?.trim()===""){
+        throw new ApiERROR(400,"id is required")
+    }
+    const message=await AdminTUM.findById(id)
+    if(!message){
+        throw new ApiERROR(400,"Message does not exist")
+    }
+    const deletedmessage=await AdminTUM.deleteOne(message)
+    if(!deletedmessage){
+        throw new ApiERROR(500,"Something went wrong while deleting your message")
+    }
+    return res.status(200).json(new ApiResponse(200,{},"You have deleted message successfully"))
+})
+
+const getCurrentAdmin=asyncHandler(async(req,res)=>{
+    return res.status(200).json(new ApiResponse(200,{admin:req.admin},"You got admin"))
+})
+
+const getMessageOfUsers=asyncHandler(async(req,res)=>{
+    const id=req.query.id
+    if(id?.trim()===""){
+        throw new ApiERROR(400,"Id is required")
+    }
+    const message=await AdminMFU.find({id})
+    if(!message){
+        throw new ApiERROR(400,"There is not any message")
+    }
+    return res.status(200).json(new ApiResponse(200,{message:message},"You got messages"))
+})
+
+export {adminRegister,adminLogin,adminLogout,adminUpdate,adminChangeCurrPassword,adminGetAllUser,adminEvaluating,adminDoingMessageToUser,deleteMessageToUser,getCurrentAdmin,getMessageOfUsers,adminGetAllInternshipRequests}

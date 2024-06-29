@@ -9,7 +9,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const addInstitues=asyncHandler(async(req,res)=>{
     const {name}=req.body
-    if(name.trim===""){
+    if(name?.trim()===""){
         throw new ApiERROR(400,"Collegename is required")
     }
     const preExistedInstitute=await Institutes.findOne({name})
@@ -27,8 +27,8 @@ const addInstitues=asyncHandler(async(req,res)=>{
 
 const deletCollegeName=asyncHandler(async(req,res)=>{
     const id=req.query.id
-    const {name}=req.body
-    if(id===""){
+    const name=req.query.name
+    if(id?.trim()===""){
         throw new ApiERROR(400,"College Id is required")
     }
     const college=await Institutes.findById(id)

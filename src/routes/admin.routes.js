@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminChangeCurrPassword, adminDoingMessageToUser, adminEvaluating, adminGetAllUser, adminLogin, adminLogout, adminRegister, adminUpdate } from "../controllers/admin.controllers.js";
+import { adminChangeCurrPassword, adminDoingMessageToUser, adminEvaluating, adminGetAllInternshipRequests, adminGetAllUser, adminLogin, adminLogout, adminRegister, adminUpdate, deleteMessageToUser, getCurrentAdmin, getMessageOfUsers } from "../controllers/admin.controllers.js";
 import { verifyAdmin } from "../middlewares/auth.middleware.admin.js";
 
 const adminRouter=Router()
@@ -15,4 +15,8 @@ adminRouter.route("/adminchangepassword").put(verifyAdmin,adminChangeCurrPasswor
 adminRouter.route("/admingetusers").get(verifyAdmin,adminGetAllUser)
 adminRouter.route("/adminevaluate").post(verifyAdmin,adminEvaluating)
 adminRouter.route("/adminmessage").post(verifyAdmin,adminDoingMessageToUser)
+adminRouter.route("/admindeletemessage").delete(verifyAdmin,deleteMessageToUser)
+adminRouter.route("/admincurrent").get(verifyAdmin,getCurrentAdmin)
+adminRouter.route("/getmessageofuser").get(getMessageOfUsers)
+adminRouter.route("/getInternshipRequests").get(verifyAdmin,adminGetAllInternshipRequests)
 export default adminRouter

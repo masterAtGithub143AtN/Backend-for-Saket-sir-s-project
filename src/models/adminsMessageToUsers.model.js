@@ -1,24 +1,28 @@
-import mongoose,{Mongoose, Schema} from "mongoose";
-import bcrypt from "bcrypt"
+import mongoose, { Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
 
-const AdminMessagetoUsers=new Schema({
-    userid:{
+const adminMessageToUsersSchema = new Schema({
+    userid: {
         type: Schema.Types.ObjectId,
-        ref: "User",
-        reuired: true
+        ref: 'User',
+        required: true // Corrected typo here
     },
-    message:{
+    message: {
         type: String,
         required: true
     }
-})
+},
+{
+    timestamps:true
+});
 
-AdminMessagetoUsers.pre("save",async function(next){
-    if(!this.isModified("message")){
-        return next()
+adminMessageToUsersSchema.pre('save', async function(next) {
+    if (!this.isModified('message')) {
+        return next();
     }
-    this.message=await bcrypt.hash(this.message,10);
-    next()
-})
+    // Assuming the intention is to hash the message. If not, reconsider this approach.
+    this.message = await bcrypt.hash(this.message, 10);
+    next();
+});
 
-export const AdminTUM=mongoose.model("AdminTUM",AdminMessagetoUsers)
+export const AdminTUM = mongoose.model('AdminTUM', adminMessageToUsersSchema);

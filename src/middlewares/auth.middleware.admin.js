@@ -7,8 +7,9 @@ import { Admin } from "../models/admin.model.js"
 
 export const verifyAdmin=asyncHandler(async (req,res,next)=>{
     try {
-        const token=req.cookies?.accesstoken || req.header("Authorization")?.replace("Bearer","")
+        const token=req.cookies?.accesstoken || req.header("Authorization")?.replace("Bearer ","")
         if(!token){
+            console.log("Token not found")
             throw new ApiERROR(400, "Unathorized access")
         }
         const decodedToken=jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)

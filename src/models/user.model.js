@@ -32,13 +32,11 @@ const userSchema=new Schema(
         rollnumber:{
             type: String,
             required: true,
-            unique: true,
             UpperCase: true,
         },
         collegename:{
             type: String,
             required: true,
-            unique: true,
             UpperCase: true,
             trim: true,
         },

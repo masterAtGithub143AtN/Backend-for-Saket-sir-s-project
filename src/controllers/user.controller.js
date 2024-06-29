@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 import { AdminMFU } from "../models/adminsMessage.model.js";
+import { Applied } from "../models/Apply.model.js";
 
 
 const generateAccessRefreshToken=async(userId)=>{
@@ -12,8 +13,6 @@ const generateAccessRefreshToken=async(userId)=>{
         const user=await User.findById(userId)
         const accessToken=await user.generateAccessToken()
         const refreshToken=await user.generateRefreshToken()
-        // console.log(accessToken)
-        // console.log(refreshToken)
         user.refreshToken=refreshToken
         await user.save({validateBeforeSave: false})
         return {accessToken,refreshToken}
@@ -35,7 +34,7 @@ const registerUser=asyncHandler(async (req,res)=>{
 
     const {fullname,email,username,password,rollnumber,collegename,semester}=req.body
     if(
-        [fullname,username,email,rollnumber,collegename,semester,password].some((field)=>field==="")
+        [fullname,username,email,rollnumber,collegename,semester,password].some((field)=>field?.trim()==="")
     ){
         throw new ApiERROR(400,"All fields are required")
     }
@@ -63,7 +62,7 @@ const registerUser=asyncHandler(async (req,res)=>{
         // avatar:avatar?.url || "",
         email,
         password,
-        username: username.toLowerCase(),
+        username,
         rollnumber,
         semester,
         collegename
@@ -78,6 +77,57 @@ const registerUser=asyncHandler(async (req,res)=>{
     )
 
 })
+
+// const loginUser = asyncHandler(async (req, res) => {
+//     const { email, username, password } = req.body;
+
+//     if (!(username?.trim() || email?.trim())) {
+//         throw new ApiERROR(400, "Username or email is required");
+//     }
+
+//     const user = await User.findOne({
+//         $or: [{ username }, { email }],
+//     });
+
+//     if (!user) {
+//         // Distinguish user not found error
+//         return res.status(404).json({
+//             message: "User does not exist",
+//             errorType: "USER_NOT_FOUND"
+//         });
+//     }
+
+//     const isPasswordValid = await user.isPasswordCorrect(password);
+//     if (!isPasswordValid) {
+//         // Distinguish invalid password error
+//         return res.status(401).json({
+//             message: "Invalid password",
+//             errorType: "INVALID_PASSWORD"
+//         });
+//     }
+
+//     const { accessToken, refreshToken } = await generateAccessRefreshToken(user._id);
+//     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+//     const options = {
+//         httpOnly: true,
+//         secure: true
+//     };
+
+//     return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json(
+//         new ApiResponse(
+//             200,
+//             {
+//                 user: loggedInUser, accessToken, refreshToken
+//             },
+//             "User logged in successfully"
+//         )
+//     );
+// });
+
+
+
+
 
 const loginUser=asyncHandler(async (req,res)=>{
     //req body-> data
@@ -110,18 +160,36 @@ const loginUser=asyncHandler(async (req,res)=>{
         secure: true
     }
 
-    return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json(
-        new ApiResponse(
-            200,
-            {
-                user: loggedInUser,accessToken,refreshToken
-            },
-            "User logged In successfully"
-        )
-    )
+    // return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json(
+    //     new ApiResponse(
+    //         200,
+    //         {
+    //             user: loggedInUser,accessToken,refreshToken
+    //         },
+    //         "User logged In successfully"
+    //     )
+    // )
+
+    return res
+  .status(200)
+  .cookie("accessToken", accessToken, options)
+  .cookie("refreshToken", refreshToken, options)
+  .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in successfully"));
+
 
 })
 
+
+
+
+
+
+const DirectloggedIn=asyncHandler(async(req,res)=>{
+    return res.status(200).json({
+        message:"success",
+        status:200
+    })
+})
 
 const logoutUser=asyncHandler(async (req,res)=>{
     await User.findByIdAndUpdate(
@@ -168,8 +236,8 @@ const refreshAccessToken=asyncHandler(async (req,res)=>{
             secure: true
         }
         const {accessToken,refreshToken}=await generateAccessRefreshToken(user._id)
-        console.log(accessToken)
-        console.log(refreshToken)
+        // console.log(accessToken)
+        // console.log(refreshToken)
         return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json(new ApiResponse(
             200,
             {accessToken: accessToken,refreshToken:refreshToken},
@@ -184,7 +252,7 @@ const refreshAccessToken=asyncHandler(async (req,res)=>{
 
 const changeCurrentPassword=asyncHandler(async (req,res)=>{
     const {oldpassword,newpassword}=req.body
-    if([oldpassword,newpassword].some((field)=> field==="")){
+    if([oldpassword,newpassword].some((field)=> field?.trim()==="")){
         throw new ApiERROR(400,"All fields are required")
     }
     const user=await User.findById(req.user?._id)
@@ -203,12 +271,17 @@ const changeCurrentPassword=asyncHandler(async (req,res)=>{
 
 
 const getCurrentUser=asyncHandler(async (req,res)=>{
-    return res.status(200).json(200,req.user,"current user fetched")
+    // console.log(req.user)
+    return res.status(200).json({
+        status:200,
+        Data:req.user,
+        message:"current user fetched"
+    })
 })
 
 const updateAccountDetails=asyncHandler(async (req,res)=>{
     const {fullname,email,collegename,semester,rollnumber}=req.body
-    if([fullname,email,collegename,semester,rollnumber].some((field)=>field==="")){
+    if([fullname,email,collegename,semester,rollnumber].some((field)=>field?.trim()==="")){
         throw new ApiERROR(400,"All fields are required")
     }
    const user= User.findByIdAndUpdate(
@@ -229,8 +302,8 @@ const updateAccountDetails=asyncHandler(async (req,res)=>{
 
 
 const messageToAdmin=asyncHandler(async(req,res)=>{
-    const {message}=req.body
-    if(message.trim===""){
+    const {message,projectid}=req.body
+    if(message?.trim()===""){
         throw new ApiERROR(400,"Please type some message")
     }
     if(message.length>100){
@@ -238,13 +311,88 @@ const messageToAdmin=asyncHandler(async(req,res)=>{
     }
     const sendedmessage=await AdminMFU.create({
         userid:req.user._id,
-        messageToAdmin
+        message,
+        projectid:projectid
     })
     if(!sendedmessage){
         throw new ApiERROR(500,"Something went wrong while sendin message")
     }
-    return res.status(200).json(new ApiResponse(200,{},"You have sended message successfully"))
+    return res.status(200).json(new ApiResponse(200,{message:sendedmessage},"You have sended message successfully"))
+})
+const deleteMessageToadmin=asyncHandler(async(req,res)=>{
+    const id=req.query.id
+    if(id?.trim()===""){
+        throw new ApiERROR(400,"Message Id is required")
+    }
+    const messaged=await AdminMFU.findById(id)
+    if(!messaged){
+        throw new ApiERROR(400,"there is nothing with this id")
+    }
+    const deletedmessage=await AdminMFU.deleteOne(messaged)
+    if(!deletedmessage){
+        throw new ApiERROR(500,"something went wrong while deleting your message")
+    }
+    return res.status(200).json(new ApiResponse(200,{},"Message deleted succcessfully"))
 })
 
 
-export {registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,messageToAdmin}
+const ApplyingUser=asyncHandler(async(req,res)=>{
+    const id=req.body.id;
+    const projectid=req.body.projectid;
+    const Status=req.query.Status;
+    if(id?.trim()==="" || Status?.trim()===""){
+        throw new ApiERROR(400,"All fields are required!")
+    }
+    const FindingUser=await User.findById(id);
+    if(!FindingUser){
+        throw new ApiERROR(400,"User does not exist")
+    }
+    const AllReadyApplied=await Applied.findOne({userid:id,projectid:projectid})
+    if(AllReadyApplied){
+        throw new ApiERROR(400,"You have already applied for this project")
+    }
+    const CreatedRequest=await Applied.create({
+        userid: id,
+        Status:"Applied",
+        projectid:projectid
+    })
+    if(!CreatedRequest){
+        throw new ApiERROR(500,"Something went wrong while sending request")
+    }
+    return res.status(200).json({
+        status:200,
+        message:"Successfully sent"
+    })
+})
+
+const getRequestStatus=asyncHandler(async(req,res)=>{
+    const AllAppliedlist = await Applied.find({ userid: req.user._id});
+    return res.status(200).json({
+        status: 200,
+        message:"success",
+        Data:AllAppliedlist
+    })
+})
+const cancelRequest=asyncHandler(async(req,res)=>{
+    const projectid=req.query.projectid;
+    if(projectid?.trim()===""){
+        throw new ApiERROR(400,"Project Id is required")
+    }
+    const request=await Applied.findOne({userid:req.user._id,projectid})
+    if(!request){
+        throw new ApiERROR(400,"You have not applied for this project")
+    }
+    const deletedRequest=await Applied.deleteOne(request)
+    if(!deletedRequest){
+        throw new ApiERROR(500,"Something went wrong while deleting request")
+    }
+    return res.status(200).json({
+        status:200,
+        message:"Request deleted successfully"
+    })
+})
+
+
+
+
+export {registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,messageToAdmin,deleteMessageToadmin,DirectloggedIn,ApplyingUser,getRequestStatus,cancelRequest}
